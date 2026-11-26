@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бабушкины рецепты</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f7fc;
+  color: #183047;
+  font-size: 21px;
+}
+
+header {
+  background: #1769aa;
+  color: white;
+  text-align: center;
+  padding: 30px 15px;
+}
+
+header h1 {
+  font-size: 38px;
+  margin: 0;
+}
+
+header p {
+  font-size: 21px;
+}
+
+main {
+  max-width: 850px;
+  margin: auto;
+  padding: 15px;
+}
+
+h2 {
+  font-size: 30px;
+}
+
+button {
+  width: 100%;
+  padding: 20px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 15px;
+  background: #1769aa;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0d548e;
+}
+
+.back {
+  background: #d9ecfa;
+  color: #124c7d;
+}
+
+.panel {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  margin-top: 18px;
+}
+
+.hidden {
+  display: none;
+}
+
+.ingredient {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin: 8px 0;
+  background: #eef6fd;
+  border-radius: 12px;
+}
+
+.ingredient input {
+  width: 25px;
+  height: 25px;
+}
+
+.recipe {
+  background: white;
+  border: 2px solid #d7e9f8;
+  border-radius: 15px;
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.recipe h3 {
+  font-size: 26px;
+}
+
+.small {
+  background: #d9ecfa;
+  color: #124c7d;
+  font-size: 20px;
+}
+
+input[type="search"] {
+  width: 100%;
+  padding: 16px;
+  font-size: 21px;
+  border: 2px solid #9bc8ed;
+  border-radius: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🍲 Бабушкины рецепты</h1>
+  <p>Просто выбрать — легко приготовить!</p>
+</header>
+
+<main>
+
+<!-- ГЛАВНОЕ МЕНЮ -->
+<section id="home">
+  <div class="panel">
+    <h2>Что будем готовить?</h2>
+
+    <button onclick="showPage('choose')">
+      🥕 Что есть дома?
+    </button>
+
+    <button onclick="showPage('all')">
+      📖 Все рецепты
+    </button>
+
+    <button onclick="showPage('favorites')">
+      ❤️ Любимые блюда
+    </button>
+  </div>
+</section>
+
+<!-- ПРОДУКТЫ -->
+<section id="choose" class="hidden">
+  <button class="back" onclick="showPage('home')">
+    ← На главную
+  </button>
+
+  <div class="panel">
+    <h2>Что есть у вас дома?</h2>
+    <p>Отметьте продукты галочками:</p>
+
+    <div id="ingredients"></div>
+
+    <button onclick="suggestRecipes()">
+      Показать, что приготовить
+    </button>
+  </div>
+
+  <div id="suggestions"></div>
+</section>
+
+<!-- ВСЕ РЕЦЕПТЫ -->
+<section id="all" class="hidden">
+  <button class="back" onclick="showPage('home')">
+    ← На главную
+  </button>
+
+  <div class="panel">
+    <h2>Все рецепты</h2>
+
+    <input
+      type="search"
+      id="search"
+      placeholder="🔎 Найти блюдо..."
+      oninput="renderAll()"
+    >
+
+    <div id="allRecipes"></div>
+  </div>
+</section>
+
+<!-- ИЗБРАННОЕ -->
+<section id="favorites" class="hidden">
+  <button class="back" onclick="showPage('home')">
+    ← На главную
+  </button>
+
+  <div class="panel">
+    <h2>❤️ Любимые блюда</h2>
+    <div id="favRecipes"></div>
+  </div>
+</section>
+
+<!-- СТРАНИЦА РЕЦЕПТА -->
+<section id="detail" class="hidden">
+  <button class="back" onclick="backFromDetail()">
+    ← Назад
+  </button>
+
+  <div id="recipeDetail" class="panel"></div>
+</section>
+
+</main>
+
+<script>
+const recipes = [
+{
+  name: "Омлет",
+  category: "Завтрак",
+  ingredients: ["яйца", "молоко", "соль"],
+  steps: [
+    "Взбейте яйца с молоком и солью.",
+    "Вылейте смесь на сковороду.",
+    "Готовьте под крышкой 5–7 минут."
+  ]
+},
+{
+  name: "Сырники",
+  category: "Завтрак",
+  ingredients: ["творог", "яйца", "мука", "сахар"],
+  steps: [
+    "Разомните творог вилкой.",
+    "Добавьте яйцо, сахар и муку.",
+    "Сформируйте сырники и обжарьте."
+  ]
+},
+{
+  name: "Блины",
+  category: "Завтрак",
+  ingredients: ["молоко", "яйца", "мука", "сахар"],
+  steps: [
+    "Смешайте молоко, яйца, муку и сахар.",
+    "Размешайте тесто.",
+    "Испеките блины на сковороде."
+  ]
+},
+{
+  name: "Куриный суп",
+  category: "Супы",
+  ingredients: ["курица", "картофель", "морковь", "лук"],
+  steps: [
+    "Сварите курицу.",
+    "Добавьте картофель.",
+    "Добавьте морковь и лук и варите до готовности."
+  ]
+},
+{
+  name: "Овощной суп",
+  category: "Супы",
+  ingredients: ["картофель", "морковь", "лук", "капуста"],
+  steps: [
+    "Вскипятите воду.",
+    "Добавьте нарезанные овощи.",
+    "Варите до мягкости."
+  ]
+},
+{
+  name: "Макароны с сыром",
+  category: "Основные блюда",
+  ingredients: ["макароны", "сыр", "масло"],
+  steps: [
+    "Отварите макароны.",
+    "Добавьте масло.",
+    "Посыпьте сыром и перемешайте."
+  ]
+},
+{
+  name: "Картофельное пюре",
+  category: "Основные блюда",
+  ingredients: ["картофель", "молоко", "масло"],
+  steps: [
+    "Отварите картофель.",
+    "Разомните его.",
+    "Добавьте молоко и масло."
+  ]
+},
+{
+  name: "Овощной салат",
+  category: "Салаты",
+  ingredients: ["огурцы", "помидоры", "лук"],
+  steps: [
+    "Нарежьте огурцы и помидоры.",
+    "Добавьте лук.",
+    "Заправьте маслом."
+  ]
+},
+{
+  name: "Яблочный пирог",
+  category: "Выпечка",
+  ingredients: ["яблоки", "мука", "яйца", "сахар"],
+  steps: [
+    "Нарежьте яблоки.",
+    "Смешайте яйца, сахар и муку.",
+    "Добавьте яблоки и выпекайте при 180 °C около 35–40 минут."
+  ]
+},
+{
+  name: "Фруктовый салат",
+  category: "Десерты",
+  ingredients: ["яблоки", "бананы", "йогурт"],
+  steps: [
+    "Нарежьте фрукты.",
+    "Положите их в тарелку.",
+    "Добавьте йогурт."
+  ]
+}
+];
+
+const allIngredients = [
+  ...new Set(recipes.flatMap(r => r.ingredients))
+].sort((a, b) => a.localeCompare(b, "ru"));
+
+let previousPage = "all";
+
+function showPage(page) {
+  document.querySelectorAll("main > section")
+    .forEach(section => section.classList.add("hidden"));
+
+  document.getElementById(page).classList.remove("hidden");
+
+  if (page === "all") renderAll();
+  if (page === "favorites") renderFavorites();
+}
+
+function getFavorites() {
+  return JSON.parse(
+    localStorage.getItem("grandmaFavorites") || "[]"
+  );
+}
+
+function toggleFavorite(name) {
+  let favorites = getFavorites();
+
+  if (favorites.includes(name)) {
+    favorites = favorites.filter(item => item !== name);
+  } else {
+    favorites.push(name);
+  }
+
+  localStorage.setItem(
+    "grandmaFavorites",
+    JSON.stringify(favorites)
+  );
+
+  if (!document.getElementById("favorites").classList.contains("hidden")) {
+    renderFavorites();
+  } else if (!document.getElementById("all").classList.contains("hidden")) {
+    renderAll();
+  } else if (!document.getElementById("detail").classList.contains("hidden")) {
+    openRecipe(name);
+  }
+}
+
+function recipeCard(recipe) {
+  const favorite = getFavorites().includes(recipe.name);
+
+  return `
+    <div class="recipe">
+      <h3>${recipe.name}</h3>
+      <p>Категория: ${recipe.category}</p>
+      <p>Продукты: ${recipe.ingredients.join(", ")}</p>
+
+      <button onclick="openRecipe('${recipe.name}')">
+        Открыть рецепт
+      </button>
+
+      <button class="small"
+        onclick="toggleFavorite('${recipe.name}')">
+        ${favorite ? "❤️ Убрать из любимых" : "♡ В любимые"}
+      </button>
+    </div>
+  `;
+}
+
+function renderAll() {
+  const query = document.getElementById("search")
+    .value.toLowerCase();
+
+  const found = recipes.filter(recipe =>
+    (recipe.name + recipe.category + recipe.ingredients.join(" "))
+      .toLowerCase()
+      .includes(query)
+  );
+
+  document.getElementById("allRecipes").innerHTML =
+    found.map(recipeCard).join("") ||
+    "<p>Ничего не найдено.</p>";
+}
+
+function renderFavorites() {
+  const favorites = getFavorites();
+
+  const found = recipes.filter(recipe =>
+    favorites.includes(recipe.name)
+  );
+
+  document.getElementById("favRecipes").innerHTML =
+    found.map(recipeCard).join("") ||
+    "<p>Пока здесь пусто. Добавьте любимые блюда из всех рецептов.</p>";
+}
+
+function suggestRecipes() {
+  const selected = [
+    ...document.querySelectorAll("#ingredients input:checked")
+  ].map(input => input.value);
+
+  const found = recipes
+    .map(recipe => ({
+      ...recipe,
+      matches: recipe.ingredients.filter(
+        ingredient => selected.includes(ingredient)
+      ).length
+    }))
+    .filter(recipe => selected.length > 0 && recipe.matches > 0)
+    .sort((a, b) => b.matches - a.matches);
+
+  document.getElementById("suggestions").innerHTML =
+    "<div class='panel'><h2>Можно приготовить:</h2>" +
+    (found.length
+      ? found.map(recipeCard).join("")
+      : "<p>Отметьте продукты, которые есть дома.</p>") +
+    "</div>";
+}
+
+function openRecipe(name) {
+  const recipe = recipes.find(r => r.name === name);
+
+  previousPage = document.getElementById("favorites").classList.contains("hidden")
+    ? (document.getElementById("choose").classList.contains("hidden") ? "all" : "choose")
+    : "favorites";
+
+  document.getElementById("recipeDetail").innerHTML = `
+    <h2>${recipe.name}</h2>
+
+    <h3>🥕 Ингредиенты</h3>
+    <ul>
+      ${recipe.ingredients.map(item => `<li>${item}</li>`).join("")}
+    </ul>
+
+    <h3>👩‍🍳 Как приготовить</h3>
+    <ol>
+      ${recipe.steps.map(step => `<li>${step}</li>`).join("")}
+    </ol>
+
+    <button class="small"
+      onclick="toggleFavorite('${recipe.name}')">
+      ${getFavorites().includes(recipe.name)
+        ? "❤️ Убрать из любимых"
+        : "♡ Добавить в любимые"}
+    </button>
+  `;
+
+  showPage("detail");
+}
+
+function backFromDetail() {
+  showPage(previousPage);
+}
+
+function initIngredients() {
+  document.getElementById("ingredients").innerHTML =
+    allIngredients.map(item => `
+      <label class="ingredient">
+        <input type="checkbox" value="${item}">
+        ${item}
+      </label>
+    `).join("");
+}
+
+initIngredients();
+</script>
+
+</body>
+</html>
